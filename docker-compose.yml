@@ -1,0 +1,29 @@
+services:
+  mypostgres:
+    image: postgres:latest
+    container_name: postgres_db
+    restart: always
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5438:5432"
+
+  web:
+    build: .
+    container_name: django_app
+    volumes:
+      - .:/app
+    restart: always
+    depends_on:
+      - mypostgres
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=True
+
+volumes:
+  postgres_data:
