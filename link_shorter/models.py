@@ -17,8 +17,6 @@ class Redirect(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.hash:
-            parsed_url = urlparse(self.full_url)
-            self.hash = parsed_url.path.lstrip('/')
 
             while True:
                 self.hash = ''.join(
@@ -34,5 +32,17 @@ class Redirect(models.Model):
 
         super().save(*args, **kwargs)
 
-    def __str__(self) -> str:
-        return f'{self.hash} -> {self.full_url}'
+    def delete(self, using=None, keep_parents=False):
+        super().delete(using=using, keep_parents=keep_parents)
+
+
+
+class ClickLog(models.Model):
+
+    short_url = models.ForeignKey(Redirect, on_delete=models.CASCADE, related_name="click_logs")
+    ip_address = models.GenericIPAddressField()
+    user_agent = models.TextField()
+    clicked_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Click on {self.short_url.hash} at {self.clicked_at}"

@@ -12,28 +12,47 @@ class RedirectAPIView(APIView):
     def post(self, request):
         base_url = request.build_absolute_uri('/')[:-1]
         serializer = TokenSerializer(data=request.data)
+
+
         if serializer.is_valid():
-            full_url = request.data['url']
 
-            redirect_obj = Redirect(full_url=full_url)
-            redirect_obj.save()
+            hash_value, status_code = serializer.create(
+                validated_data=serializer.validated_data
+            )
 
-            short_url = f"{base_url}/{redirect_obj.hash}"
+            short_url = f"{base_url}/{hash_value.hash}"
             response_data = {
                 "data": {
-                    "url": short_url
+                    "url": short_url,
                 }
             }
-            return Response(response_data, status=status.HTTP_201_CREATED)
+            return Response(response_data, status=status_code)
         return Response({"error": serializer.errors}, status=400)
 
-    def get(self, request):
-        short_url = request.query_params.get("url", None)
+    def patch(self, request, *args, **kwargs):
+        hash_value = kwargs.get("hash")
+        if not hash_value:
+            return Response({"error": "Hash parameter is required"}, status=status.HTTP_400_BAD_REQUEST)
 
-        if not short_url:
+        redirect_obj = get_object_or_404(Redirect, hash=hash_value)
+        new_url = request.data.get("url")
+
+        if not new_url:
+            return Response({"error": "New URL is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        redirect_obj.full_url = new_url
+        redirect_obj.save()
+
+        return Response({"message": "URL updated successfully"}, status=status.HTTP_200_OK)
+
+    def delete(self, request, *args, **kwargs):
+
+        hash_value = kwargs.get("hash")
+
+        if not hash:
             return Response({"error": "URL parameter is required"}, status=status.HTTP_400_BAD_REQUEST)
 
-        hash_part = short_url.rstrip("/").split("/")[-1]
+        redirect_obj = get_object_or_404(Redirect, hash=hash_value)
+        redirect_obj.delete()
 
-        redirect_obj = get_object_or_404(Redirect, hash=hash_part)
-        return Response({"full_url": redirect_obj.full_url}, status=status.HTTP_200_OK)
+        return Response({"message": "URL deleted successfully"}, status=status.HTTP_204_NO_CONTENT)

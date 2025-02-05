@@ -14,9 +14,9 @@ class TokenSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         full_url = validated_data['full_url']
-        token, created = Redirect.objects.get_or_create(full_url=full_url)
+        hash, created = Redirect.objects.get_or_create(full_url=full_url)
         if created:
             status_code = status.HTTP_201_CREATED
         else:
             status_code = status.HTTP_200_OK
-        return token, status_code
+        return hash, status_code
