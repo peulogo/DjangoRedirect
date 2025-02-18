@@ -37,12 +37,12 @@ class Redirect(models.Model):
 
 
 
-class ClickLog(models.Model):
-
-    short_url = models.ForeignKey(Redirect, on_delete=models.CASCADE, related_name="click_logs")
-    ip_address = models.GenericIPAddressField()
-    user_agent = models.TextField()
-    clicked_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f"Click on {self.short_url.hash} at {self.clicked_at}"
+# class ClickLog(models.Model):
+#
+#     short_url = models.ForeignKey(Redirect, on_delete=models.CASCADE, related_name="click_logs")
+#     ip_address = models.GenericIPAddressField()
+#     user_agent = models.TextField()
+#     clicked_at = models.DateTimeField(auto_now_add=True)
+#
+#     def __str__(self):
+#         return f"Click on {self.short_url.hash} at {self.clicked_at}"
