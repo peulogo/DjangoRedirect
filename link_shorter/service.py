@@ -3,6 +3,8 @@ from django.shortcuts import redirect, get_object_or_404
 from django.utils.timezone import now
 import pika
 import json
+
+from .rabbitmq import rabbitmq
 from .models import Redirect
 
 
@@ -24,23 +26,7 @@ def get_client_ip(request):
 
 
 def send_to_rabbitmq(message: dict):
-    credentials = pika.PlainCredentials('rmuser', 'rmpassword')
-    parameters = pika.ConnectionParameters(host="rabbitmq", credentials=credentials)
-    connection = pika.BlockingConnection(parameters)
-    channel = connection.channel()
-
-    channel.exchange_declare(exchange="statistic_service", exchange_type="direct", durable=True)
-
-    channel.basic_publish(
-        exchange="statistic_service",
-        routing_key="click.log",
-        body=json.dumps(message),
-        properties=pika.BasicProperties(
-            delivery_mode=2
-        )
-    )
-
-    connection.close()
+    rabbitmq.send_message(message)
 
 
 def redirection(request, hash):
@@ -51,11 +37,11 @@ def redirection(request, hash):
 
         client_ip = get_client_ip(request)
         user_agent = request.META.get("HTTP_USER_AGENT", "Unknown")
-        base_url = request.build_absolute_uri('/')[:-1]
         message = {
-            "short_url": f"{base_url}/{hash}",
+            "short_url_id": redirect_obj.id,
             "user_agent": user_agent,
             "ip_address": client_ip,
+            "created_at": now().isoformat()
         }
 
         send_to_rabbitmq(message)

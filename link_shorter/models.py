@@ -5,6 +5,7 @@ from django.conf import settings
 
 class Redirect(models.Model):
 
+    id = models.AutoField(primary_key=True)
     hash = models.CharField(max_length=6, unique=True)
     full_url = models.CharField(max_length=1000, unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -13,6 +14,7 @@ class Redirect(models.Model):
         return self.hash
 
     class Meta:
+        db_table = "short_urls"
         ordering = ('-created_at',)
 
     def save(self, *args, **kwargs):
@@ -35,14 +37,12 @@ class Redirect(models.Model):
     def delete(self, using=None, keep_parents=False):
         super().delete(using=using, keep_parents=keep_parents)
 
+class ClickLog(models.Model):
+    id = models.AutoField(primary_key=True)
+    short_url_id = models.IntegerField()
+    ip_address = models.GenericIPAddressField()
+    user_agent = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
 
-
-# class ClickLog(models.Model):
-#
-#     short_url = models.ForeignKey(Redirect, on_delete=models.CASCADE, related_name="click_logs")
-#     ip_address = models.GenericIPAddressField()
-#     user_agent = models.TextField()
-#     clicked_at = models.DateTimeField(auto_now_add=True)
-#
-#     def __str__(self):
-#         return f"Click on {self.short_url.hash} at {self.clicked_at}"
+    class Meta:
+        db_table = "click_log"
