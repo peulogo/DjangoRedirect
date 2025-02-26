@@ -23,17 +23,17 @@ class RabbitMQ:
 
             self.channel.exchange_declare(exchange="statistic_service", exchange_type="direct", durable=True)
 
-            logger.info("Connected to RabbitMQ successfully")
+            logger.info("Успешно подключено к RabbitMQ")
 
         except pika.exceptions.AMQPError as e:
-            logger.error(f"Failed to connect to RabbitMQ: {e}")
+            logger.error(f"Не удалось подключиться к RabbitMQ: {e}")
             self.connection = None
             self.channel = None
 
     def send_message(self, message: dict):
 
         if not self.channel:
-            logger.error("RabbitMQ channel is not available")
+            logger.error("Канал RabbitMQ недоступен")
             return
 
         try:
@@ -43,16 +43,16 @@ class RabbitMQ:
                 body=json.dumps(message),
                 properties=pika.BasicProperties(delivery_mode=2)
             )
-            logger.info(f"Message sent to RabbitMQ: {message}")
+            logger.info(f"Сообщение отправлено в RabbitMQ: {message}")
 
         except pika.exceptions.AMQPError as e:
-            logger.error(f"Failed to send message to RabbitMQ: {e}")
+            logger.error(f"Не удалось отправить сообщение в RabbitMQ: {e}")
 
     def close_connection(self):
 
         if self.connection:
             self.connection.close()
-            logger.info("RabbitMQ connection closed")
+            logger.info("Соединение с RabbitMQ закрыто")
 
 
 rabbitmq = RabbitMQ()

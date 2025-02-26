@@ -5,7 +5,7 @@ from django.shortcuts import get_object_or_404
 
 from .models import Redirect
 from .serializers import TokenSerializer
-
+from .redis_cache import redis_cache
 
 class RedirectAPIView(APIView):
 
@@ -21,6 +21,8 @@ class RedirectAPIView(APIView):
             )
 
             short_url = f"{base_url}/{hash_value.hash}"
+            redis_cache.set_url(hash_value.hash, [hash_value.id, hash_value.full_url])
+
             response_data = {
                 "data": {
                     "url": short_url,
@@ -42,6 +44,7 @@ class RedirectAPIView(APIView):
 
         redirect_obj.full_url = new_url
         redirect_obj.save()
+        redis_cache.set_url(hash_value, [redirect_obj.id, redirect_obj.full_url])
 
         return Response({"message": "URL updated successfully"}, status=status.HTTP_200_OK)
 
@@ -49,10 +52,13 @@ class RedirectAPIView(APIView):
 
         hash_value = kwargs.get("hash")
 
-        if not hash:
+        if not hash_value:
             return Response({"error": "URL parameter is required"}, status=status.HTTP_400_BAD_REQUEST)
 
         redirect_obj = get_object_or_404(Redirect, hash=hash_value)
         redirect_obj.delete()
+
+        redis_cache.delete_url(hash_value)
+
 
         return Response({"message": "URL deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
